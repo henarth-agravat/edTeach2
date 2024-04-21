@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Transcription</title>
+    <link rel="stylesheet" href="style.css">
+    
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body.dark-theme {
+            background-color: #121212;
+            color: #fff;
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            padding: 0;
+            position: relative;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 50px auto;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 36px;
+            margin-bottom: 20px;
+        }
+
+        .file-input {
+            margin-bottom: 20px;
+        }
+
+        #videoInput {
+            display: none;
+        }
+
+        .container-vd{
+            max-width: 1000px;
+            margin: 50px auto;
+            text-align: center;
+            display: flex; /* Use flexbox to align items */
+        }
+
+        .video-container{
+            display: flex;
+        }
+
+        .video-container{
+            flex: 6; /* 60% width */
+            padding: 0 10px; /* Adjust padding as needed */
+        }
+
+        .transcription-container{
+            flex: 4; /* 40% width */
+            padding: 0 10px; /* Adjust padding as needed */
+        }
+
+        .upload-label {
+            display: inline-block;
+            padding: 15px 25px;
+            color: #fff;
+            background-color: #333;
+            border: 2px solid #fff;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .upload-label:hover {
+            background-color: #fff;
+            color: #333;
+        }
+
+        .transcribe-btn {
+            padding: 15px 25px;
+            background-color: #4CAF50;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .transcribe-btn:hover {
+            background-color: #fff;
+            color: #4CAF50;
+        }
+
+        .file-name {
+            margin-left: 10px;
+            color: #aaa;
+            font-size: 14px;
+        }
+
+        #videoInput:focus + .upload-label {
+            outline: 2px solid #4CAF50;
+            outline-offset: -2px;
+        }
+
+        .transcription {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.3);
+            background-color: #333;
+            position: relative;
+            height: 300px;
+            overflow-y: auto;
+            text-align: justify;
+        }
+
+        .transcription h2 {
+            color: #fff;
+        }
+
+        .transcription p {
+            color: #fff;
+            cursor: pointer; /* Add cursor pointer to indicate clickable text */
+        }
+
+        /* Loading spinner style */
+        .spinner-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            display: none; /* Initially hidden */
+            z-index: 999; /* Ensure spinner is on top of other elements */
+        }
+
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 4px solid #fff;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="dark-theme">
+    <div class="container">
+        <h1>Video Transcription</h1>
+        <form action="/transcribe" method="post" enctype="multipart/form-data" id="form_inp">
+            <div class="file-input">
+                <input type="file" name="file" id="videoInput" accept="video/*" onchange="updateFileName(this)">
+                <label for="videoInput" class="upload-label">Choose a video</label>
+                <span id="file-name" class="file-name">No file chosen</span>
+            </div>
+            <button type="button" onclick="transcribeVideo()" class="transcribe-btn">Transcribe</button>
+            <!-- Loading spinner -->
+            <div id="loadingSpinner" class="spinner-container">
+                <div class="spinner"></div>
+            </div>
+        </form>
+        <div class="container-vd">
+        <div class="video-container">
+            <!-- Video element -->
+            <video id="videoPlayer" controls style="width: 100%; display: none;"></video>
+        </div>
+        <div class="transcription-container">
+            
+            <div id="transcriptionResult" class="transcription"></div>
+        </div>
+    </div>
+    <div id="quizResult" class="quiz"></div>
+    </div>
+
+    <script>
+        var videoPlayer = document.getElementById('videoPlayer');
+    
+        function updateFileName(input) {
+            const fileName = input.files[0].name;
+            document.getElementById('file-name').innerText = fileName;
+        }
+    
+        function transcribeVideo() {
+        var fileInput = document.getElementById('videoInput');
+        var file = fileInput.files[0];
+
+        if (!file) {
+            alert('Please select a video file.');
+            return;
+        }
+
+        var formData = new FormData();
+        formData.append('file', file);
+
+        // Display loading spinner
+        document.getElementById('loadingSpinner').style.display = 'block';
+
+        fetch('/transcribe', {
+            method: 'POST',
+            body: formData
+        })
+            .then(response => response.json())
+            .then(data => {
+            // Parse the transcript
+            const parsedSentences = parseTranscript(data.text);
+
+            // Remove timestamps from the transcript
+            const cleanedTranscript = removeTimestamps(data.text);
+
+            // Highlight the cleaned transcript with seekable words
+            const highlightedTranscript = parsedSentences.length > 0 ? highlightTranscript(cleanedTranscript, parsedSentences) : cleanedTranscript;
+
+            // Display the highlighted transcript
+            document.getElementById('transcriptionResult').innerHTML = `<h2>Transcription:</h2>${highlightedTranscript}`;
+
+            // Display the quiz
+            const quiz = JSON.parse(data.quiz)
+            document.getElementById('quizResult').innerHTML = `
+            <h2>Quiz:</h2>
+            <h4>Give the Correct Answer of the following quiz</h4>
+            <br><br>
+            <h3>${quiz.q1}<h3>
+            <h4>a) ${quiz.q1_a}<h4>
+            <h4>b) ${quiz.q1_b}<h4>
+            <h4>c) ${quiz.q1_c}<h4>
+            <h4>d) ${quiz.q1_d}<h4>
+            <br><br>
+            <h3>${quiz.q2}<h3>
+            <h4>a) ${quiz.q2_a}<h4>
+            <h4>b) ${quiz.q2_b}<h4>
+            <h4>c) ${quiz.q2_c}<h4>
+            <h4>d) ${quiz.q2_d}<h4>
+            <br><br>
+            <h3>${quiz.q3}<h3>
+            <h4>a) ${quiz.q3_a}<h4>
+            <h4>b) ${quiz.q3_b}<h4>
+            <h4>c) ${quiz.q3_c}<h4>
+            <h4>d) ${quiz.q3_d}<h4>
+            <br><br>
+            <h3>${quiz.q4}<h3>
+            <h4>a) ${quiz.q4_a}<h4>
+            <h4>b) ${quiz.q4_b}<h4>
+            <h4>c) ${quiz.q4_c}<h4>
+            <h4>d) ${quiz.q4_d}<h4>
+            <br><br>
+            <h3>${quiz.q5}<h3>
+            <h4>a) ${quiz.q5_a}<h4>
+            <h4>b) ${quiz.q5_b}<h4>
+            <h4>c) ${quiz.q5_c}<h4>
+            <h4>d) ${quiz.q5_d}<h4>
+
+            <br><br>
+            <h3>Answers:<h3>
+            <h4>q1) ${quiz.answers.q1}<h4>
+            <h4>q2) ${quiz.answers.q2}<h4>
+            <h4>q3) ${quiz.answers.q3}<h4>
+            <h4>q4) ${quiz.answers.q4}<h4>
+            <h4>q5) ${quiz.answers.q5}<h4>
+            `;
+
+            // Hide loading spinner after response received
+            document.getElementById('loadingSpinner').style.display = 'none';
+
+            // Show video player and set its source
+            videoPlayer.style.display = 'block';
+            videoPlayer.src = URL.createObjectURL(file);
+            })
+            .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while transcribing the video.');
+            // Hide loading spinner in case of error
+            document.getElementById('loadingSpinner').style.display = 'none';
+            });
+        }
+    
+        function removeTimestamps(transcript) {
+            // Define the timestamp pattern
+        const timestampPattern = /^\d+\s+\d{2}:\d{2}:\d{2},\d{3}\s+-->\s+\d{2}:\d{2}:\d{2},\d{3}\s*$/gm;
+
+            // Remove lines containing timestamps
+        const cleanedTranscript = transcript.replace(timestampPattern, '');
+
+            return cleanedTranscript;
+        }
+
+
+        function highlightTranscript(transcript, parsedSentences) {
+        // Split the transcript into words
+        const words = transcript.split(' ');
+
+        // Create highlighted HTML for each word
+        const highlightedWords = words.map((word, index) => {
+            // Find the sentence containing this word
+            const sentence = parsedSentences.find(s => s.sentence.includes(word));
+
+            // If a sentence is found, associate the word with the start time
+            if (sentence) {
+            const startTime = sentence.startTime;
+            return `<span onclick="seekTo('${startTime}')" style="cursor: pointer;">${word}</span>`;
+            } else {
+            // Otherwise, just return the word
+            return `<span>${word}</span>`;
+            }
+        });
+
+        // Join the words back together to form the highlighted transcript
+        return highlightedWords.join(' ');
+        }
+    
+        function seekTo(startTime) {
+            // Check if the startTime is a valid time string
+            if (!/^\d{2}:\d{2}:\d{2},\d{3}$/.test(startTime)) {
+                console.error('Invalid start time:', startTime);
+                return;
+            }
+
+            const [hours, minutes, secondsMilliseconds] = startTime.split(':');
+            const [seconds, milliseconds] = secondsMilliseconds.split(',');
+
+            // Calculate total seconds
+            const seekTime = (parseInt(hours) * 3600) + (parseInt(minutes) * 60) + parseInt(seconds) + (parseInt(milliseconds) / 1000);
+
+            // Set the video's current time to the calculated seek time
+            console.log(seekTime);
+            videoPlayer.currentTime = seekTime;
+        }
+
+        function parseTranscript(transcript) {
+            const sentences = [];
+            const timestampRegex = /^(\d+)\s+(\d{2}:\d{2}:\d{2},\d{3})\s+-->\s+(\d{2}:\d{2}:\d{2},\d{3})\s*(.*)/gm;
+
+            let match;
+            while ((match = timestampRegex.exec(transcript)) !== null) {
+                const [, index, startTime, endTime, sentence] = match;
+                const words = sentence.trim().split(' ');
+
+                // Calculate the total duration of the sentence
+                const startTimeSeconds = parseTime(startTime);
+                const endTimeSeconds = parseTime(endTime);
+                const sentenceDuration = endTimeSeconds - startTimeSeconds;
+
+                // Divide the sentence duration equally among the words
+                const wordDuration = sentenceDuration / words.length;
+
+                // Associate each word with its corresponding start time
+                words.forEach((word, i) => {
+                const wordStartTime = formatTime(startTimeSeconds + i * wordDuration);
+                sentences.push({ index: parseInt(index), startTime: wordStartTime, sentence: word });
+                });
+            }
+
+            return sentences;
+            }
+
+            function parseTime(timeString) {
+            const [hours, minutes, secondsMilliseconds] = timeString.split(':');
+            const [seconds, milliseconds] = secondsMilliseconds.split(',');
+
+            return parseInt(hours) * 3600 + parseInt(minutes) * 60 + parseInt(seconds) + parseInt(milliseconds) / 1000;
+            }
+
+            function formatTime(seconds) {
+            const hours = Math.floor(seconds / 3600);
+            const minutes = Math.floor((seconds % 3600) / 60);
+            const remainingSeconds = Math.floor(seconds % 60);
+            const milliseconds = Math.floor((seconds % 1) * 1000);
+
+            return `${padZero(hours)}:${padZero(minutes)}:${padZero(remainingSeconds)},${padZero(milliseconds, 3)}`;
+            }
+
+            function padZero(value, length = 2) {
+            return value.toString().padStart(length, '0');
+        }
+    </script>
+    
+    
+    
+</body>
+</html>
