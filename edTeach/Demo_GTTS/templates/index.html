@@ -213,7 +213,7 @@
             const highlightedTranscript = parsedSentences.length > 0 ? highlightTranscript(cleanedTranscript, parsedSentences) : cleanedTranscript;
 
             // Display the highlighted transcript
-            document.getElementById('transcriptionResult').innerHTML = `<h2>Transcription:</h2>${highlightedTranscript}`;
+            document.getElementById('transcriptionResult').innerHTML = <h2>Transcription:</h2>${highlightedTranscript};
 
             // Display the quiz
             const quiz = JSON.parse(data.quiz)
@@ -222,34 +222,59 @@
             <h4>Give the Correct Answer of the following quiz</h4>
             <br><br>
             <h3>${quiz.q1}<h3>
-            <h4>a) ${quiz.q1_a}<h4>
-            <h4>b) ${quiz.q1_b}<h4>
-            <h4>c) ${quiz.q1_c}<h4>
-            <h4>d) ${quiz.q1_d}<h4>
+            <input type="radio" id="q1" name="q1" value="a">
+            <label>a) ${quiz.q1_a}<label><br>
+            <input type="radio" id="q1" name="q1" value="b">
+            <label>b) ${quiz.q1_b}<label><br>
+            <input type="radio" id="q1" name="q1" value="c">
+            <label>c) ${quiz.q1_c}<label><br>
+            <input type="radio" id="q1" name="q1" value="d">
+            <label>d) ${quiz.q1_d}<label><br>
+                            
             <br><br>
             <h3>${quiz.q2}<h3>
-            <h4>a) ${quiz.q2_a}<h4>
-            <h4>b) ${quiz.q2_b}<h4>
-            <h4>c) ${quiz.q2_c}<h4>
-            <h4>d) ${quiz.q2_d}<h4>
+            <input type="radio" id="q2" name="q2" value="a">
+            <label>a) ${quiz.q2_a}<label><br>
+            <input type="radio" id="q2" name="q2" value="b">
+            <label>b) ${quiz.q2_b}<label><br>
+            <input type="radio" id="q2" name="q2" value="c">
+            <label>c) ${quiz.q2_c}<label><br>
+            <input type="radio" id="q2" name="q2" value="d">
+            <label>d) ${quiz.q2_d}<label><br>
+
+
             <br><br>
             <h3>${quiz.q3}<h3>
-            <h4>a) ${quiz.q3_a}<h4>
-            <h4>b) ${quiz.q3_b}<h4>
-            <h4>c) ${quiz.q3_c}<h4>
-            <h4>d) ${quiz.q3_d}<h4>
+            <input type="radio" id="q3" name="q3" value="a">
+            <label>a) ${quiz.q3_a}<label><br>
+            <input type="radio" id="q3" name="q3" value="b">
+            <label>b) ${quiz.q3_b}<label><br>
+            <input type="radio" id="q3" name="q3" value="c">
+            <label>c) ${quiz.q3_c}<label><br>
+            <input type="radio" id="q3" name="q3" value="d">
+            <label>d) ${quiz.q3_d}<label><br>
+
             <br><br>
             <h3>${quiz.q4}<h3>
-            <h4>a) ${quiz.q4_a}<h4>
-            <h4>b) ${quiz.q4_b}<h4>
-            <h4>c) ${quiz.q4_c}<h4>
-            <h4>d) ${quiz.q4_d}<h4>
+            <input type="radio" id="q4" name="q4" value="a">
+            <label>a) ${quiz.q4_a}<label><br>
+            <input type="radio" id="q4" name="q4" value="b">
+            <label>b) ${quiz.q4_b}<label><br>
+            <input type="radio" id="q4" name="q4" value="c">
+            <label>c) ${quiz.q4_c}<label><br>
+            <input type="radio" id="q4" name="q4" value="d">
+            <label>d) ${quiz.q4_d}<label><br>
+
             <br><br>
             <h3>${quiz.q5}<h3>
-            <h4>a) ${quiz.q5_a}<h4>
-            <h4>b) ${quiz.q5_b}<h4>
-            <h4>c) ${quiz.q5_c}<h4>
-            <h4>d) ${quiz.q5_d}<h4>
+            <input type="radio" id="q5" name="q5" value="a">
+            <label>a) ${quiz.q5_a}<label><br>
+            <input type="radio" id="q5" name="q5" value="b">
+            <label>b) ${quiz.q5_b}<label><br>
+            <input type="radio" id="q5" name="q5" value="c">
+            <label>c) ${quiz.q5_c}<label><br>
+            <input type="radio" id="q5" name="q5" value="d">
+            <label>d) ${quiz.q5_d}<label><br>
 
             <br><br>
             <h3>Answers:<h3>
@@ -298,10 +323,10 @@
             // If a sentence is found, associate the word with the start time
             if (sentence) {
             const startTime = sentence.startTime;
-            return `<span onclick="seekTo('${startTime}')" style="cursor: pointer;">${word}</span>`;
+            return <span onclick="seekTo('${startTime}')" style="cursor: pointer;">${word}</span>;
             } else {
             // Otherwise, just return the word
-            return `<span>${word}</span>`;
+            return <span>${word}</span>;
             }
         });
 
@@ -367,7 +392,7 @@
             const remainingSeconds = Math.floor(seconds % 60);
             const milliseconds = Math.floor((seconds % 1) * 1000);
 
-            return `${padZero(hours)}:${padZero(minutes)}:${padZero(remainingSeconds)},${padZero(milliseconds, 3)}`;
+            return ${padZero(hours)}:${padZero(minutes)}:${padZero(remainingSeconds)},${padZero(milliseconds, 3)};
             }
 
             function padZero(value, length = 2) {
